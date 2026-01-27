@@ -1,1 +1,8 @@
 PyPDF2
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+sentence-transformers
+faiss-cpu
+requests

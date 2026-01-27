@@ -1,7 +1,7 @@
 from typing import List, Dict
 
 
-class PageChunker:
+class TextChunker:
     """
     Splits page-level documents into overlapping chunks
     while preserving metadata.

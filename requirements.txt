@@ -1,8 +1,21 @@
-PyPDF2
-fastapi
-uvicorn
-pydantic
-pydantic-settings
-sentence-transformers
-faiss-cpu
-requests
+# --- API ---
+fastapi>=0.104
+uvicorn[standard]>=0.23
+
+# --- Data / Validation ---
+pydantic>=2.5
+pydantic-settings>=2.1
+
+# --- PDF ---
+PyPDF2>=3.0
+
+# --- Embeddings ---
+sentence-transformers>=2.2
+torch>=2.0
+numpy>=1.24
+
+# --- Vector Store ---
+faiss-cpu>=1.7
+
+# --- LLM Client ---
+requests>=2.31

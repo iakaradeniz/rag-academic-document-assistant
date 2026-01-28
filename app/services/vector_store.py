@@ -28,9 +28,11 @@ class FaissVectorStore:
         self.metadata.extend(metadatas)
         self._save()
 
-    def search(self, query_embedding: List[float], top_k: int = 5):
-        query_vector = np.array([query_embedding]).astype("float32")
-        scores, indices = self.index.search(query_vector, top_k)
+    def search(self, query_embedding, top_k: int = 5):
+        if len(query_embedding.shape) == 1:
+            query_embedding = query_embedding.reshape(1, -1)
+
+        scores, indices = self.index.search(query_embedding, top_k)
 
         results = []
         for idx in indices[0]:
@@ -38,6 +40,7 @@ class FaissVectorStore:
                 results.append(self.metadata[idx])
 
         return results
+
 
     def _save(self):
         faiss.write_index(self.index, self.index_path)

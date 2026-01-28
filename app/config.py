@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     # LLM
     LLM_MODEL_NAME: str = "mistral"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
+    EMBEDDING_DIM: int = 384
 
     # Embedding
     EMBEDDING_MODEL_NAME: str = "all-MiniLM-L6-v2"

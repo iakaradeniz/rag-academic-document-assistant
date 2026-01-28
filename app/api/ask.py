@@ -1,11 +1,13 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List
-from app.services.embedder import TextEmbedder
-from app.services.vector_store import FaissVectorStore
-from app.config import settings
 import numpy as np
 import requests
+
+from app.services.embedder import TextEmbedder
+from app.services.vector_store import FaissVectorStore
+from app.services.context_cleaner import ContextCleaner
+from app.config import settings
 
 router = APIRouter(prefix="/ask", tags=["ask"])
 
@@ -30,8 +32,9 @@ async def ask_question(payload: AskRequest):
     """
     1. Embed the question
     2. Search FAISS
-    3. Send context to Ollama (Mistral)
-    4. Return answer + contexts
+    3. Clean contexts
+    4. Send context to Ollama (Mistral)
+    5. Return answer + contexts
     """
 
     question = payload.question
@@ -52,9 +55,12 @@ async def ask_question(payload: AskRequest):
         top_k=payload.top_k,
     )
 
-    # 3️⃣ Extract texts
-    contexts = [r["text"][:800] for r in results[:3]]
-
+    # 3️⃣ Extract & clean contexts (limit for prompt safety)
+    raw_contexts = [r["text"] for r in results[:3]]
+    contexts = [
+        ContextCleaner.clean(c)[:800]
+        for c in raw_contexts
+    ]
 
     # 4️⃣ Build prompt
     context_text = "\n\n".join(
@@ -63,8 +69,8 @@ async def ask_question(payload: AskRequest):
 
     prompt = f"""
 Aşağıda bazı akademik doküman parçaları verilmiştir.
-Bu metinleri kullanarak soruyu cevapla.
-Eğer cevap metinlerde yoksa açıkça söyle.
+Sadece bu metinleri kullanarak soruyu cevapla.
+Eğer cevap metinlerde yoksa açıkça "Bu bilgi dokümanlarda yok." de.
 
 ### Dokümanlar:
 {context_text}
@@ -83,8 +89,10 @@ Eğer cevap metinlerde yoksa açıkça söyle.
             "prompt": prompt,
             "stream": False
         },
-        timeout=150
+        timeout=300  # Mistral yavaş olabilir
     )
+
+    response.raise_for_status()
 
     answer = response.json().get("response", "").strip()
 
